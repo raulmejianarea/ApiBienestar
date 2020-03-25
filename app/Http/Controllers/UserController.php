@@ -15,32 +15,7 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
+    
     public function store(Request $request)
     {
         $created_user = User::where('email', '=', $request->email)->first();
@@ -73,52 +48,7 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
-    }
-
-    ///USER LOGIN/// ///TERMINADO///
+    ///login
     public function user_login(Request $request)
     {
         
@@ -161,7 +91,7 @@ class UserController extends Controller
 
     }
 
-    ///RECUPERAR CONTRASEÑA// //NO TERMINADO//
+    ///recover password
     public function recover_user_password(Request $request){
 
         $user = User::where('email', '=', $request->email)->first();
@@ -205,7 +135,8 @@ class UserController extends Controller
         $request_user = $request->user;
         $name_user = $request_user->name;
         $email_user = $request_user->email;
-        $data = array('name' => $name_user, 'app_name' => $request->app_name);
+        $name_app = $request->app_name;
+        $data = array('name' => $name_user, 'app_name' => $name_app);
 
        Mail::to($email_user)->send(new NotificationReceived($data));
 
@@ -213,13 +144,13 @@ class UserController extends Controller
        return response()->json([
     
         "message" => "notification sent",
+        "app" => $name_app
 
     ]);
         
     }
 
-    //USO TOTAL//
-    ///PRUEBA GET TIME DIFERENCE/// ////TERMINADO CON PINZAS///
+    //uso total
     public function get_time_diff(Request $request, $id)
     {
         $request_user = $request->user;
@@ -261,7 +192,7 @@ class UserController extends Controller
 
     }
 
-    //PRUEBA////GUARDARLO COMO ORO EN PANO//
+    //tiempo de uso al dia
     public function daily_usage_time(Request $request, $id)
     {
         $request_user = $request->user;
@@ -354,7 +285,7 @@ class UserController extends Controller
 
     }
 
-    //CREAR RESTRICCIONES// //TERMINADO//
+    //crear restricciones
     public function create_restriction(Request $request, $id)
     {
         $request_user = $request->user;
@@ -366,6 +297,8 @@ class UserController extends Controller
             $app->pivot->usage_from_hour = $request->usage_from_hour;
             $app->pivot->usage_to_hour = $request->usage_to_hour;
             $app->pivot->save();
+            
+            return response()->json("constraint created", 200);
 
         }else{
 
@@ -375,33 +308,23 @@ class UserController extends Controller
                 'usage_from_hour' => $request->usage_from_hour,
                 'usage_to_hour' => $request->usage_to_hour,
     
-            ]);   
+            ]);
         }  
                   
     }
 
-    ///GENERAR NUEVA CONTASEÑA///
+    ///generar nueva contraseña
     public function generate_password()
     {
-        echo("hola");
-
         $password_generator = new PasswordGenerator(8);
         $pass = $password_generator->generate_password(); 
 
-        return response()->json([
-
-            "new password" => $pass,
-
-        ], 200);
+        return response()->json("new password generated", 200);
 
     }
 
-    ///BORRAR RESTRICCIONES/// ///NO TERMINADO///
-    
-
-
-    //OBTENER DATOS DEL USUARIO// //TERMINADO//
-    public function get_user_data(Request $request)
+    //Obtener informacion del usuario
+    public function get_user_information(Request $request)
     {
         $request_user = $request->user;     
         $decrypted_password = decrypt($request_user->password);
@@ -416,7 +339,7 @@ class UserController extends Controller
 
     }
 
-    //CAMBIAR PASSWORD DEL USUARIO - V1// //TERMINADO//
+    //Cambia la contraseña del usuario
     public function change_user_password(Request $request)
     {
         $request_user = $request->user;

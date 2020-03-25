@@ -19,33 +19,18 @@ class AppController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
-    {
-        $apps = App::select('id','name','logo')->get();  
+ 
+    public function listApps(Request $request){
+        $request_user = $request->user;
+        $apps = App::All('id','name', 'logo');
         
-        return response()->json(
-
-            $apps
-
-        , 200);
+        if(empty($apps)){
+            $apps = array('error_code' => 400, 'error_msg' => 'No hay lessons encontrados');
+        }else {
+            return response()->json($apps, 200);
+        }
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {   
         $app = new App();
@@ -53,74 +38,16 @@ class AppController extends Controller
         $app->name = $request->name;
         $app->save();
 
-        return response()->json([
-                
-            "message" => "new app stored"
-
-        ], 200);
-
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
+        return response()->json(["message" => "new app stored"], 200);
     }
     
     public function store_apps_list(Request $request)
     {        
-        //$array_csv = array_map('str_getcsv', file('/Applications/MAMP/htdocs/bienestar-digital-api-classroom/csv_files/apps_list.csv')); 
-        //$array_csv = array_map('str_getcsv', file('D:\Programas\xampp\htdocs\bienestar-digital-api-classroom\csv_files\apps_list.csv')); 
-        //MAC//$lines = explode(PHP_EOL, $request->csv);
-        //PC//$lines = explode("\n", $request->csv);
-        
         $lines = explode("\n", $request->csv);
-        
         $array_csv = [];
         
         foreach ($lines as $line) {
-            
             $array_csv[] = str_getcsv($line);
-        
         }        
 
         foreach ($array_csv as $key => $line) {           
@@ -154,13 +81,8 @@ class AppController extends Controller
    
     public function store_apps_data(Request $request)
     {
-        //$array_csv = array_map('str_getcsv', file('D:\Programas\xampp\htdocs\bienestar-digital-api-classroom\csv_files\usage_dummy.csv'));
-        //MAC//$lines = explode(PHP_EOL, $request->csv);
-        //PC//$lines = explode("\n", $request->csv);
         $request_user = $request->user; 
-        
-        $lines = explode("\n", $request->csv);
-                
+        $lines = explode("\n", $request->csv);      
         $array_csv = [];
         
         foreach ($lines as $line) {
@@ -191,7 +113,7 @@ class AppController extends Controller
 
     }
     
-    public function get_app_total_usage_time(Request $request, $id){
+    public function total_time_used (Request $request, $id){
 
         $request_user = $request->user;          
         
@@ -211,7 +133,7 @@ class AppController extends Controller
 
     }
 
-    public function get_apps_statistics(Request $request)
+    public function apps_statistics(Request $request)
     {
         $request_user = $request->user;        
         $apps_names = App::select('name')->get();
@@ -228,8 +150,8 @@ class AppController extends Controller
             $total_usage_time_in_milliseconds  = $total_usage_time_in_seconds * 1000;
             
             $day_average = Carbon::createFromTimestampMs($total_usage_time_in_milliseconds / 365)->format('H:i:s.u');            
-            // $week_average = Carbon::createFromTimestampMs($total_usage_time_in_milliseconds / 52)->format('H:i:s.u');
-            // $month_average = Carbon::createFromTimestampMs($total_usage_time_in_milliseconds / 12)->format('H:i:s.u');
+            $week_average = Carbon::createFromTimestampMs($total_usage_time_in_milliseconds / 52)->format('H:i:s.u');
+            $month_average = Carbon::createFromTimestampMs($total_usage_time_in_milliseconds / 12)->format('H:i:s.u');
           
             $apps_time_averages[] = new AppTimeStorage($app_name["name"], $total_usage_time, $day_average);
 
@@ -243,8 +165,7 @@ class AppController extends Controller
 
     }
 
-    //TIEMPO TOTAL DE DIAS ANTERIORES// // CASI TERMINADO //
-    public function total_usage_time_per_day(Request $request, $id)
+    public function time_per_day_used (Request $request, $id)
     {
         $request_user = $request->user;        
         $app_entries = $request_user->apps;
@@ -270,8 +191,8 @@ class AppController extends Controller
         , 200);
     
     }
-    /////
-    public function get_apps_restrictions(Request $request)
+ 
+    public function apps_restrictions(Request $request)
     {
         $request_user = $request->user;
         $restrictions = DB::table('users_restrict_apps')->where('user_id', '=', $request_user->id)->get();                      
@@ -291,9 +212,7 @@ class AppController extends Controller
         , 200);
 
     }
-    /////
-
-    public function get_apps_usage_range(Request $request, $date)
+    public function apps_usage_range(Request $request, $date)
     {
         $request_user = $request->user;
         $apps = App::all();
@@ -362,15 +281,11 @@ class AppController extends Controller
             }
         }
 
-        return response()->json(
-
-            $apps_ranges
-
-        , 200);
+        return response()->json($apps_ranges, 200);
 
     }
 
-    public function get_apps_coordinates(Request $request)
+    public function apps_coordinates(Request $request)
     {
         $request_user = $request->user;        
         $apps_names = App::select('name')->get();
@@ -417,14 +332,11 @@ class AppController extends Controller
        
     }
 
-    ///////////////////////////////////////////FINAL/////////////////////////////////////////////
-
-    //PRUEBA////GUARDARLO COMO ORO EN PANO//
-    public function SAVE_total_usage_time(Request $request, $id)
+   
+    public function save_used_time(Request $request, $id)
     {
         $request_user = $request->user;
-        //$app_entries = $request_user->apps()->wherePivot('app_id', $id)->whereDate('date', "=", '2019-11-19')->get();//ATENTO A LA DATE//    
-        $app_entries = $request_user->apps()->wherePivot('app_id', $id)->get();//ATENTO A LA DATE//
+        $app_entries = $request_user->apps()->wherePivot('app_id', $id)->get();
         $app_entry = $request_user->apps()->wherePivot('app_id', $id)->first();   
         $app_entries_lenght = count($app_entries);
         $total_time_in_seconds = 0;
@@ -512,25 +424,5 @@ class AppController extends Controller
         ]);
 
     }
-
-    public function listApps(Request $request){
-        $request_user = $request->user;
-        $apps = App::select('logo')->get();
-        
-        if(empty($apps)){
-            $apps = array('error_code' => 400, 'error_msg' => 'No hay lessons encontrados');
-        }else {
-            return response()->json($apps);
-        }
-
-        // $lessons = Lesson::all(['id', 'name', 'lesson_url']);
-        // if(empty($lessons)){
-        //     $lessons = array('error_code' => 400, 'error_msg' => 'No hay lessons encontrados');
-        // }else{
-        //     return response()->json($lessons);
-        // }
-    }
-
-    
 
 }
